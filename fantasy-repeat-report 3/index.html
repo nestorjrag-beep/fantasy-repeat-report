@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repeat or Regress: Fantasy Football Report</title>
+<meta name="description" content="Do fantasy football's top finishers repeat? PPR finishes of QB, RB, WR and TE player-seasons, 2015–2025.">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231e5b3c'/><text x='16' y='22' font-size='16' font-family='Arial' font-weight='900' fill='white' text-anchor='middle'>R</text></svg>">
+<style>
+  .h1-sub { display: block; font-size: .5em; font-weight: 600; color: var(--ink-2); letter-spacing: 0; margin-top: 10px; line-height: 1.35; }
+  .tier-note { font-size: 13px; color: var(--muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="brand-mark">R</span>Repeat or Regress</a>
+    <div class="nav-links">
+      <a href="index.html" aria-current="page">Report</a>
+      <a href="dashboard.html">Dashboard</a>
+    </div>
+    <button class="theme-btn" id="themeBtn" aria-label="Switch light or dark mode">☾</button>
+  </div>
+</nav>
+
+<main class="wrap narrow">
+  <header class="hero">
+    <p class="eyebrow">A report for PPR fantasy football managers</p>
+    <h1>At which positions do top fantasy finishers repeat the next season?
+      <span class="h1-sub">Season-long PPR finishes of QB, RB, WR and TE player-seasons, 2015–2025 NFL regular seasons</span>
+    </h1>
+    <div class="byline">Nestor Aguilar</div>
+
+    <p class="lede"><strong>Last season's top finishers repeat only about half the time: 52.4% of top-12 QBs and TEs and top-24 RBs and WRs finished at that level again the next year.</strong>
+      <strong>Elite running backs are the safest bet (72% of top-5 RBs stayed in the top 24), elite quarterbacks are the least reliable (54%), and receivers are deep enough that you can wait on them.</strong>
+      An elite tight end also gives you the biggest edge over an average starter at his position, scoring 60% more points.</p>
+    <p class="reco"><strong>Recommendation:</strong> spend your first pick on a top-5 running back, take one of the top three tight ends if he is there in the next round or two, wait on quarterback, and build your receiver depth in the middle rounds. Do not pay full price for last year's QB1.</p>
+  </header>
+
+  <div class="kpis" aria-label="Summary numbers, all seasons and positions">
+    <div class="kpi"><div class="kpi-label">Player-seasons counted</div><div class="kpi-value" id="kpiSeasons">–</div><div class="kpi-note">QB, RB, WR, TE, 2015–2025</div></div>
+    <div class="kpi"><div class="kpi-label">Top-finisher repeat rate</div><div class="kpi-value" id="kpiRepeat">–</div><div class="kpi-note" id="kpiRepeatN"></div></div>
+    <div class="kpi"><div class="kpi-label">Top-5 repeat rate</div><div class="kpi-value" id="kpiTop5">–</div><div class="kpi-note" id="kpiTop5N"></div></div>
+    <div class="kpi"><div class="kpi-label">PPR points per game, top finishers</div><div class="kpi-value" id="kpiPPG">–</div><div class="kpi-note" id="kpiPPGN"></div></div>
+  </div>
+  <p class="tier-note">A <strong>top finisher</strong> is a top-12 QB or TE or a top-24 RB or WR by season PPR points, the usual cut for a weekly starter in a 12-team league. "Repeat" means the same player finishes as a top finisher at the same position the next season.</p>
+
+  <section class="finding reveal">
+    <div class="finding-num">Finding 1</div>
+    <h2>Only about half of last year's top finishers repeat, and that holds every year</h2>
+    <p>Each season has 72 top finishers (12 QBs, 24 RBs, 24 WRs, 12 TEs). From 2015 through 2024, the share who finished as top finishers again the next season stayed between <strong>47.2%</strong> (2017 and 2019) and <strong>59.7%</strong> (2021), for <strong>52.4%</strong> overall across 720 top finishes. Injuries, role changes and age reset the board about as often as they don't, so last year's final rankings are a weak draft guide on their own.</p>
+    <div class="card">
+      <p class="chart-title">Top-finisher repeat rate by season</p>
+      <p class="chart-sub">Share of each season's 72 top finishers who were top finishers again the next season</p>
+      <div class="chart-box"><canvas id="c1" role="img" aria-label="Line chart of repeat rate by season, between 47 and 60 percent"></canvas></div>
+    </div>
+  </section>
+
+  <section class="finding reveal">
+    <div class="finding-num">Finding 2</div>
+    <h2>Elite running backs hold their value best, and elite quarterbacks hold it least</h2>
+    <p>Among the top 5 at each position, <strong>72%</strong> of running backs finished top-24 again the next season, compared with <strong>64%</strong> of receivers, <strong>64%</strong> of tight ends and only <strong>54%</strong> of quarterbacks (50 top-5 finishes per position). Across all top finishers the positions look much closer (QB 55.0%, RB 54.2%, WR 52.5%, TE 45.8%), so the RB edge is about the very best backs, not the position as a whole.</p>
+    <div class="card">
+      <p class="chart-title">Repeat rate by position</p>
+      <p class="chart-sub">Top-5 finishers compared with all top finishers, 2015–2024 seasons with a next season</p>
+      <div class="chart-box"><canvas id="c2" role="img" aria-label="Bar chart of repeat rate by position"></canvas></div>
+    </div>
+  </section>
+
+  <section class="finding reveal">
+    <div class="finding-num">Finding 3</div>
+    <h2>The higher a player finishes, the better his odds next year, but even the top 3 miss 30% of the time</h2>
+    <p>Players who finished 1st to 3rd at their position were top finishers again <strong>70.0%</strong> of the time. The odds fall steadily with the finish: <strong>57.5%</strong> for 4th to 6th, <strong>50.8%</strong> for 7th to 12th, <strong>32.7%</strong> for 13th to 24th and <strong>4.6%</strong> for everyone below 24th. Drafting the very top of last year's list pays off, but nearly one in three of those picks still lets you down.</p>
+    <div class="card">
+      <p class="chart-title">Chance of a top-finisher season next year, by this year's finish</p>
+      <p class="chart-sub">All four positions, 2015–2024 seasons with a next season</p>
+      <div class="chart-box"><canvas id="c3" role="img" aria-label="Bar chart of next-season odds by finish tier"></canvas></div>
+    </div>
+  </section>
+
+  <section class="finding reveal">
+    <div class="finding-num">Finding 4</div>
+    <h2>Receiver is the deepest position, so you can wait on it</h2>
+    <p>Points fall off much more slowly at receiver than at running back. On average, the 22nd to 24th best receivers scored <strong>207.0</strong> PPR points, compared with <strong>178.5</strong> for running backs at the same spots. Further down, receivers ranked 34th to 36th still averaged <strong>175.3</strong> points, while running backs there averaged <strong>137.6</strong>. A WR you take in the middle rounds gives up less to the top of the position than an RB taken there does.</p>
+    <div class="card">
+      <p class="chart-title">Average season PPR points by positional finish</p>
+      <p class="chart-sub">Each point is the average across the 11 seasons for that finish (1st, 2nd, … 36th)</p>
+      <div class="legend" id="legend4"></div>
+      <div class="chart-box tall"><canvas id="c4" role="img" aria-label="Line chart of average points by positional rank for each position"></canvas></div>
+    </div>
+  </section>
+
+  <section class="finding reveal">
+    <div class="finding-num">Finding 5</div>
+    <h2>An elite tight end is worth the most over a normal starter</h2>
+    <p>The top 3 tight ends each season averaged <strong>242.5</strong> PPR points, compared with <strong>151.6</strong> for tight ends who finished 10th to 12th, an edge of <strong>60.0%</strong>. That is the biggest gap at any position: running backs come next at 51.3%, then receivers at 37.6% and quarterbacks at 31.1%. Because most leagues start only one TE and one QB, the elite TE is the scarce advantage and the elite QB is the one you can skip.</p>
+    <div class="card">
+      <p class="chart-title">Elite edge: top-3 finishers over 10th–12th finishers</p>
+      <p class="chart-sub">Percent more season PPR points, average of 2015–2025</p>
+      <div class="chart-box"><canvas id="c5" role="img" aria-label="Bar chart of elite edge by position"></canvas></div>
+    </div>
+    <a class="cta" href="dashboard.html">Explore by season, position, team or player →</a>
+  </section>
+
+  <section class="notes" id="data">
+    <h2>About the data</h2>
+    <dl>
+      <dt>Where the data come from</dt>
+      <dd>Weekly player statistics from <a href="https://github.com/nflverse/nflverse-data/releases">nflverse</a>, a free public NFL data project: the <code>player_stats</code> release for 2015–2024 and the <code>stats_player</code> release for 2025. nflverse already computes PPR fantasy points for each player in each game (1 point per reception, 0.1 per rushing or receiving yard, 0.04 per passing yard, 6 per rushing or receiving TD, 4 per passing TD, −2 per interception or fumble lost, 2 per two-point conversion).</dd>
+      <dt>What one row is</dt>
+      <dd>One row of <code>data/player_seasons.csv</code> is one QB, RB, WR or TE in one NFL regular season: total PPR points, games with a stat line, points per game, finish at his position, and whether he was a top finisher the next season. The file has 6,170 rows covering 1,795 players over 11 seasons. The script <code>prep.py</code> builds it from the weekly files.</dd>
+      <dt>Which rows are dropped and why</dt>
+      <dd>From the 73,901 weekly rows for 2015–2025, I dropped 3,189 playoff rows (fantasy seasons are regular-season only) and 14,059 rows for other positions such as FB, K and defensive players (they are not QB, RB, WR or TE). Seasons before 2015 are left out to keep the period to the modern game, and the 2026 season is left out because it is still in progress. That leaves 56,653 weekly rows, which add up to the 6,170 player-seasons. 2025 player-seasons are kept in the counts and points, but they cannot count toward a repeat rate yet because the 2026 season has not finished.</dd>
+      <dt>How each summary number is computed</dt>
+      <dd><strong>Player-seasons counted</strong> is the number of rows. <strong>Top-finisher repeat rate</strong> takes every top finisher from a season that has a next season in the data (2015–2024) and divides the number who were top finishers again the next season by that total; a player with no row the next season counts as not repeating. <strong>Top-5 repeat rate</strong> does the same for players who finished 1st to 5th at their position, and counts them as repeating if they were top finishers (top 12 or top 24) the next season. <strong>PPR points per game, top finishers</strong> is the total PPR points of all top finishers divided by their total games.</dd>
+      <dt>Other definitions</dt>
+      <dd>Positional finish ranks every player at a position by season PPR points, across the whole league. Games are weeks with a stat line. A player's team is the team he played the most games for that season. The season and position filters on the dashboard choose which rows are counted, but they never re-rank players.</dd>
+    </dl>
+  </section>
+</main>
+<footer class="wrap narrow">Built by Nestor Aguilar for FINN 43303, Walton College of Business. Data: nflverse.</footer>
+
+<script src="lib/papaparse.min.js"></script>
+<script src="lib/chart.umd.min.js"></script>
+<script src="core.js"></script>
+<script>
+let charts = [], DATA = [];
+function draw() {
+  charts.forEach(c => c.destroy()); charts = [];
+  chartTheme();
+  const ink = cssVar("--ink"), ink2 = cssVar("--ink-2");
+
+  // 1: repeat rate by season
+  const s = repeatBySeason(DATA);
+  charts.push(new Chart(c1, { type: "line",
+    data: { labels: s.map(d => `${d.season}→${d.season + 1}`),
+      datasets: [{ label: "Repeat rate", data: s.map(d => d.rate), borderColor: ink, backgroundColor: ink, pointBackgroundColor: ink }] },
+    options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${fmt.pct(c.raw)} of ${s[c.dataIndex].n} top finishers repeated` } } },
+      scales: { y: pctAxis(1), x: plainX() } } }));
+
+  // 2: repeat by position, top-5 vs all top finishers
+  const p = repeatByPosition(DATA);
+  charts.push(new Chart(c2, { type: "bar",
+    data: { labels: p.map(d => d.position),
+      datasets: [
+        { label: "Top-5 finishers", data: p.map(d => d.top5Rate), backgroundColor: p.map(d => posColor(d.position)), borderColor: cssVar("--surface"), borderWidth: 2 },
+        { label: "All top finishers", data: p.map(d => d.topRate), backgroundColor: p.map(d => posColor(d.position) + "66"), borderColor: cssVar("--surface"), borderWidth: 2 } ] },
+    options: { plugins: { legend: { display: true, labels: { generateLabels: () => [
+        { text: "Top-5 finishers (solid)", fillStyle: ink2, strokeStyle: ink2, fontColor: ink2 },
+        { text: "All top finishers (light)", fillStyle: ink2 + "55", strokeStyle: ink2 + "55", fontColor: ink2 }] } },
+      tooltip: { callbacks: { label: c => { const d = p[c.dataIndex]; return c.datasetIndex === 0 ? ` Top 5: ${fmt.pct(d.top5Rate)} of ${d.top5N}` : ` All top: ${fmt.pct(d.topRate)} of ${d.topN}`; } } } },
+      scales: { y: pctAxis(1), x: plainX() } } }));
+
+  // 3: odds by tier
+  const t = oddsByTier(DATA);
+  charts.push(new Chart(c3, { type: "bar",
+    data: { labels: t.map(d => TIER_LABEL[d.tier]), datasets: [{ data: t.map(d => d.rate), backgroundColor: ["#0d366b", "#184f95", "#256abf", "#5598e7", "#9ec5f4"] }] },
+    options: { plugins: { legend: { display: false }, tooltip: { callbacks: { title: c => `Finished ${c[0].label} at his position`, label: c => ` ${fmt.pct(c.raw)} were top finishers next season (n = ${t[c.dataIndex].n.toLocaleString()})` } } },
+      scales: { y: pctAxis(1), x: { ...plainX(), title: { display: true, text: "This season's finish at his position", color: ink2 } } } } }));
+
+  // 4: points by rank
+  const ranks = Array.from({ length: 36 }, (_, i) => i + 1);
+  charts.push(new Chart(c4, { type: "line",
+    data: { labels: ranks, datasets: POSITIONS.map(pos => ({ label: pos, data: pointsByRank(DATA, pos), borderColor: posColor(pos), backgroundColor: posColor(pos), pointRadius: 2 })) },
+    options: { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false },
+      tooltip: { callbacks: { title: c => `Finish #${c[0].label}`, label: c => ` ${c.dataset.label}: ${fmt.dec1(c.raw)} pts` } } },
+      scales: { y: { min: 0, grid: { color: cssVar("--grid") }, border: { display: false }, title: { display: true, text: "Average season PPR points", color: ink2 } },
+        x: { ...plainX(), title: { display: true, text: "Finish at position", color: ink2 }, ticks: { callback: (v, i) => (i + 1) % 6 === 0 || i === 0 ? i + 1 : "" } } } } }));
+  document.getElementById("legend4").innerHTML = POSITIONS.map(p => `<span><span class="pos-dot" style="background:${posColor(p)}"></span>${p}</span>`).join("");
+
+  // 5: elite premium
+  const e = elitePremium(DATA).sort((a, b) => b.premium - a.premium);
+  charts.push(new Chart(c5, { type: "bar",
+    data: { labels: e.map(d => d.position), datasets: [{ data: e.map(d => d.premium), backgroundColor: e.map(d => posColor(d.position)) }] },
+    options: { indexAxis: "y", plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const d = e[c.dataIndex]; return ` +${fmt.pct(d.premium)} (${fmt.dec1(d.elite)} vs ${fmt.dec1(d.starter)} pts)`; } } } },
+      scales: { x: { ...pctAxis(0.7), grid: { color: cssVar("--grid") } }, y: { grid: { display: false }, border: { color: cssVar("--axis") } } } } }));
+}
+setupThemeToggle(draw);
+setupReveal();
+loadData().then(d => { DATA = d; renderKpis(kpis(DATA)); draw(); });
+</script>
+</body>
+</html>

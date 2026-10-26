@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repeat or Regress: Dashboard</title>
+<meta name="description" content="Filter fantasy football repeat rates by season, position, team and player, 2015–2025.">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231e5b3c'/><text x='16' y='22' font-size='16' font-family='Arial' font-weight='900' fill='white' text-anchor='middle'>R</text></svg>">
+<style>
+  .dash-head { padding: 34px 0 14px; }
+  .dash-head h1 { font-size: clamp(24px, 3.2vw, 32px); margin-bottom: 6px; }
+  .filters { position: sticky; top: 56px; z-index: 15; background: var(--page); padding: 12px 0;
+    border-bottom: 1px solid var(--border); }
+  .frow { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-end; }
+  .fgroup { display: flex; flex-direction: column; gap: 4px; }
+  .fgroup > span { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  select, input[type=search] { height: 36px; border: 1px solid var(--border); background: var(--surface); color: var(--ink);
+    border-radius: 8px; padding: 0 10px; font: inherit; font-size: 14px; }
+  input[type=search] { width: 210px; }
+  .chips, .seg { display: flex; gap: 4px; flex-wrap: wrap; }
+  .chip, .seg button, .btn { height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink-2); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .chip[aria-pressed="true"] { color: var(--ink); border-color: var(--ink-2); }
+  .chip .pos-dot { opacity: .35; } .chip[aria-pressed="true"] .pos-dot { opacity: 1; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+  .btn:hover, .chip:hover { border-color: var(--ink-2); }
+  .btn.primary { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+  .factions { margin-left: auto; display: flex; gap: 6px; }
+  .view-note { font-size: 13px; color: var(--ink-2); margin: 10px 0 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  @media (max-width: 900px) { .filters { position: static; } .grid2 { grid-template-columns: 1fr; } input[type=search] { width: 100%; } .factions { margin-left: 0; } }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+  .seg.small button { height: 28px; font-size: 12.5px; padding: 0 9px; }
+  .spot { margin-top: 16px; display: none; }
+  .spot.on { display: block; }
+  .spot h2 { margin: 0; font-size: 22px; }
+  .spot-stats { display: flex; gap: 22px; flex-wrap: wrap; margin: 8px 0 12px; color: var(--ink-2); font-size: 14px; }
+  .spot-stats b { color: var(--ink); font-size: 18px; display: block; }
+  .yes { color: var(--good); font-weight: 700; } .no { color: var(--bad); font-weight: 700; }
+  .more { margin-top: 10px; }
+  .empty { color: var(--muted); padding: 30px; text-align: center; }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--page);
+    padding: 9px 16px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity .25s; pointer-events: none; }
+  .toast.on { opacity: 1; }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="brand-mark">R</span>Repeat or Regress</a>
+    <div class="nav-links">
+      <a href="index.html">Report</a>
+      <a href="dashboard.html" aria-current="page">Dashboard</a>
+    </div>
+    <button class="theme-btn" id="themeBtn" aria-label="Switch light or dark mode">☾</button>
+  </div>
+</nav>
+
+<main class="wrap">
+  <header class="dash-head">
+    <p class="eyebrow">Dashboard</p>
+    <h1>At which positions do top fantasy finishers repeat the next season?</h1>
+    <p class="subtitle">QB, RB, WR and TE player-seasons, PPR scoring, 2015–2025 NFL regular seasons · Nestor Aguilar</p>
+  </header>
+
+  <div class="filters">
+    <div class="frow">
+      <label class="fgroup"><span>From season</span><select id="fFrom"></select></label>
+      <label class="fgroup"><span>To season</span><select id="fTo"></select></label>
+      <div class="fgroup"><span>Quick range</span>
+        <div class="seg" id="quick">
+          <button data-q="all">All</button><button data-q="5">Last 5</button><button data-q="3">Last 3</button>
+        </div></div>
+      <div class="fgroup"><span>Position</span><div class="chips" id="fPos"></div></div>
+      <label class="fgroup"><span>Team</span><select id="fTeam"><option value="">All teams</option></select></label>
+      <label class="fgroup"><span>Player</span><input type="search" id="fPlayer" list="players" placeholder="Search a player…" autocomplete="off"></label>
+      <datalist id="players"></datalist>
+      <div class="factions">
+        <button class="btn" id="btnShare" title="Copy a link to this view">Copy link</button>
+        <button class="btn primary" id="btnReset">Reset filters</button>
+      </div>
+    </div>
+    <p class="view-note" id="viewNote"></p>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-label">Player-seasons counted</div><div class="kpi-value" id="kpiSeasons">–</div><div class="kpi-note">rows in the current view</div></div>
+    <div class="kpi"><div class="kpi-label">Top-finisher repeat rate</div><div class="kpi-value" id="kpiRepeat">–</div><div class="kpi-note" id="kpiRepeatN"></div></div>
+    <div class="kpi"><div class="kpi-label">Top-5 repeat rate</div><div class="kpi-value" id="kpiTop5">–</div><div class="kpi-note" id="kpiTop5N"></div></div>
+    <div class="kpi"><div class="kpi-label">PPR points per game, top finishers</div><div class="kpi-value" id="kpiPPG">–</div><div class="kpi-note" id="kpiPPGN"></div></div>
+  </div>
+
+  <section class="card spot" id="spot">
+    <div class="card-head">
+      <div><p class="eyebrow" style="margin:0">Player spotlight</p><h2 id="spotName"></h2></div>
+      <button class="btn" id="spotClose">Clear player</button>
+    </div>
+    <div class="spot-stats" id="spotStats"></div>
+    <p class="chart-title">Finish at his position by season</p>
+    <p class="chart-sub">Lower is better. The dashed line is the top-finisher cutoff for his position.</p>
+    <div class="chart-box"><canvas id="cSpot" role="img" aria-label="Player's positional finish by season"></canvas></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <div class="card-head">
+        <div><p class="chart-title">Repeat rate by season</p><p class="chart-sub" id="subA"></p></div>
+        <div class="seg small" id="mA"><button data-m="top_finisher">All top finishers</button><button data-m="top5">Top 5</button></div>
+      </div>
+      <div class="legend" id="legA"></div>
+      <div class="chart-box"><canvas id="cA" role="img" aria-label="Repeat rate by season"></canvas></div>
+    </section>
+    <section class="card">
+      <p class="chart-title">Repeat rate by position</p>
+      <p class="chart-sub">Solid = top-5 finishers, light = all top finishers</p>
+      <div class="chart-box"><canvas id="cB" role="img" aria-label="Repeat rate by position"></canvas></div>
+    </section>
+    <section class="card">
+      <p class="chart-title">Chance of a top-finisher season next year, by this year's finish</p>
+      <p class="chart-sub">Finish at his position this season</p>
+      <div class="chart-box"><canvas id="cC" role="img" aria-label="Next-season odds by finish tier"></canvas></div>
+    </section>
+    <section class="card">
+      <div class="card-head">
+        <div><p class="chart-title">Average PPR by positional finish</p><p class="chart-sub">Average across the selected seasons, finishes 1–36</p></div>
+        <div class="seg small" id="mD"><button data-m="ppr_points">Season points</button><button data-m="ppr_per_game">Per game</button></div>
+      </div>
+      <div class="legend" id="legD"></div>
+      <div class="chart-box"><canvas id="cD" role="img" aria-label="Average points by positional finish"></canvas></div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <div class="card-head">
+      <div><p class="chart-title">Player-seasons in this view</p><p class="chart-sub" id="tblSub"></p></div>
+    </div>
+    <div class="table-scroll">
+      <table id="tbl">
+        <thead><tr>
+          <th class="sortable" data-k="season">Season</th><th class="sortable" data-k="player">Player</th>
+          <th class="sortable" data-k="position">Pos</th><th class="sortable" data-k="team">Team</th>
+          <th class="num sortable" data-k="games">Games</th><th class="num sortable" data-k="ppr_points">PPR pts</th>
+          <th class="num sortable" data-k="ppr_per_game">PPR/G</th><th class="num sortable" data-k="pos_rank">Finish</th>
+          <th class="num sortable" data-k="next_pos_rank">Next finish</th><th>Repeated?</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <button class="btn more" id="btnMore">Show 50 more</button>
+  </section>
+</main>
+<footer class="wrap">Every number is computed in your browser from <code>data/player_seasons.csv</code>, using the same definitions as the <a href="index.html#data">report</a>. Filters choose which player-seasons count; they never re-rank players.</footer>
+<div class="toast" id="toast">Link copied</div>
+
+<script src="lib/papaparse.min.js"></script>
+<script src="lib/chart.umd.min.js"></script>
+<script src="core.js"></script>
+<script>
+const DEFAULT = { from: FIRST_SEASON, to: LAST_SEASON, pos: [...POSITIONS], team: "", player: "", mA: "top_finisher", mD: "ppr_points" };
+let S = structuredClone(DEFAULT), DATA = [], charts = {}, tblLimit = 50, sortKey = "ppr_points", sortDir = -1, first = true;
+let playerByLabel = new Map(), labelById = new Map();
+
+function readUrl() {
+  const q = new URLSearchParams(location.search);
+  const num = (k, d) => { const v = parseInt(q.get(k)); return isFinite(v) ? Math.min(LAST_SEASON, Math.max(FIRST_SEASON, v)) : d; };
+  S.from = num("from", DEFAULT.from); S.to = num("to", DEFAULT.to);
+  if (S.from > S.to) [S.from, S.to] = [S.to, S.from];
+  if (q.get("pos")) { const p = q.get("pos").split(",").filter(x => POSITIONS.includes(x)); if (p.length) S.pos = p; }
+  S.team = q.get("team") || ""; S.player = q.get("player") || "";
+  if (q.get("m") === "top5") S.mA = "top5";
+  if (q.get("d") === "ppr_per_game") S.mD = "ppr_per_game";
+}
+function writeUrl() {
+  const q = new URLSearchParams();
+  if (S.from !== DEFAULT.from) q.set("from", S.from);
+  if (S.to !== DEFAULT.to) q.set("to", S.to);
+  if (S.pos.length !== 4) q.set("pos", S.pos.join(","));
+  if (S.team) q.set("team", S.team);
+  if (S.player) q.set("player", S.player);
+  if (S.mA !== DEFAULT.mA) q.set("m", S.mA);
+  if (S.mD !== DEFAULT.mD) q.set("d", S.mD);
+  const qs = q.toString();
+  history.replaceState(null, "", qs ? "?" + qs : location.pathname);
+}
+
+function view() {
+  return DATA.filter(r => r.season >= S.from && r.season <= S.to && S.pos.includes(r.position)
+    && (!S.team || r.team === S.team) && (!S.player || r.player_id === S.player));
+}
+
+function syncControls() {
+  fFrom.value = S.from; fTo.value = S.to; fTeam.value = S.team;
+  fPlayer.value = S.player ? (labelById.get(S.player) || "") : "";
+  document.querySelectorAll("#fPos .chip").forEach(b => b.setAttribute("aria-pressed", S.pos.includes(b.dataset.p)));
+  document.querySelectorAll("#mA button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === S.mA));
+  document.querySelectorAll("#mD button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === S.mD));
+  const span = S.to - S.from + 1;
+  document.querySelectorAll("#quick button").forEach(b => {
+    const q = b.dataset.q;
+    b.setAttribute("aria-pressed", S.to === LAST_SEASON && (q === "all" ? S.from === FIRST_SEASON : span === +q));
+  });
+}
+
+function update() {
+  syncControls(); writeUrl();
+  const rows = view();
+  renderKpis(kpis(rows), first); first = false;
+  const parts = [`${S.from === S.to ? S.from : S.from + "–" + S.to}`, S.pos.length === 4 ? "all positions" : S.pos.join(", ")];
+  if (S.team) parts.push(S.team); if (S.player) parts.push(labelById.get(S.player));
+  const repeatNote = S.to === LAST_SEASON ? ` Repeat rates use ${S.from}–${LAST_SEASON - 1}, because ${LAST_SEASON} has no next season in the data yet.` : "";
+  const k = kpis(rows);
+  const emptyNote = !rows.length ? " No player-seasons match these filters." : k.repeatN === 0 ? " No top finishers in this view, so the repeat rates are blank." : "";
+  viewNote.textContent = `Showing ${parts.join(" · ")}.${repeatNote}${emptyNote}`;
+  draw(rows); spotlight(); table(rows);
+}
+
+function destroy(k) { if (charts[k]) { charts[k].destroy(); delete charts[k]; } }
+
+function draw(rows) {
+  chartTheme();
+  const ink = cssVar("--ink"), ink2 = cssVar("--ink-2");
+  const posShown = POSITIONS.filter(p => S.pos.includes(p));
+
+  // A: repeat rate by season, overall + one line per position
+  destroy("A");
+  const seasons = []; for (let s = S.from; s <= Math.min(S.to, LAST_SEASON - 1); s++) seasons.push(s);
+  const field = S.mA;
+  const rateFor = (rs, s) => { const g = rs.filter(r => r.season === s && r[field] === 1 && r.next_season_known === 1); return g.length ? { v: mean(g.map(r => r.next_top_finisher)), n: g.length } : { v: null, n: 0 }; };
+  const overall = seasons.map(s => rateFor(rows, s));
+  const ds = [{ label: "All selected", data: overall.map(o => o.v), n: overall.map(o => o.n), borderColor: ink, backgroundColor: ink, borderWidth: 3, spanGaps: true }];
+  if (posShown.length > 1) posShown.forEach(p => { const rr = rows.filter(r => r.position === p); const v = seasons.map(s => rateFor(rr, s));
+    ds.push({ label: p, data: v.map(o => o.v), n: v.map(o => o.n), borderColor: posColor(p), backgroundColor: posColor(p), borderWidth: 1.5, pointRadius: 2, spanGaps: true }); });
+  subA.textContent = field === "top5" ? "Share of top-5 finishers who were top finishers the next season" : "Share of top finishers who were top finishers again the next season";
+  legA.innerHTML = ds.map(d => `<span><span class="pos-dot" style="background:${d.borderColor}"></span>${d.label}</span>`).join("");
+  if (seasons.length) {
+    charts.A = new Chart(cA, { type: "line", data: { labels: seasons.map(s => `${s}→${String(s + 1).slice(2)}`), datasets: ds },
+      options: { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => c.raw == null ? null : ` ${c.dataset.label}: ${fmt.pct(c.raw)} (n = ${c.dataset.n[c.dataIndex]})` } } },
+        scales: { y: pctAxis(1), x: plainX() } } });
+  }
+  cA.style.display = seasons.length ? "" : "none";
+
+  // B: by position
+  destroy("B");
+  const p = repeatByPosition(rows, posShown);
+  charts.B = new Chart(cB, { type: "bar", data: { labels: p.map(d => d.position), datasets: [
+      { label: "Top-5 finishers", data: p.map(d => d.top5Rate), backgroundColor: p.map(d => posColor(d.position)), borderColor: cssVar("--surface"), borderWidth: 2 },
+      { label: "All top finishers", data: p.map(d => d.topRate), backgroundColor: p.map(d => posColor(d.position) + "66"), borderColor: cssVar("--surface"), borderWidth: 2 }] },
+    options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const d = p[c.dataIndex];
+      return c.datasetIndex === 0 ? ` Top 5: ${fmt.pct(d.top5Rate)} (n = ${d.top5N})` : ` All top: ${fmt.pct(d.topRate)} (n = ${d.topN})`; } } } },
+      scales: { y: pctAxis(1), x: plainX() } } });
+
+  // C: by tier
+  destroy("C");
+  const t = oddsByTier(rows);
+  charts.C = new Chart(cC, { type: "bar", data: { labels: t.map(d => TIER_LABEL[d.tier]),
+      datasets: [{ data: t.map(d => d.rate), backgroundColor: ["#0d366b", "#184f95", "#256abf", "#5598e7", "#9ec5f4"] }] },
+    options: { plugins: { legend: { display: false }, tooltip: { callbacks: { title: c => `Finished ${c[0].label}`, label: c => ` ${fmt.pct(c.raw)} top finishers next season (n = ${t[c.dataIndex].n})` } } },
+      scales: { y: pctAxis(1), x: plainX() } } });
+
+  // D: points by finish
+  destroy("D");
+  const ranks = Array.from({ length: 36 }, (_, i) => i + 1);
+  legD.innerHTML = posShown.map(p => `<span><span class="pos-dot" style="background:${posColor(p)}"></span>${p}</span>`).join("");
+  charts.D = new Chart(cD, { type: "line", data: { labels: ranks,
+      datasets: posShown.map(pos => ({ label: pos, data: pointsByRank(rows, pos, 36, S.mD), borderColor: posColor(pos), backgroundColor: posColor(pos), pointRadius: 1.5, spanGaps: true })) },
+    options: { interaction: { mode: "index", intersect: false }, plugins: { legend: { display: false },
+      tooltip: { callbacks: { title: c => `Finish #${c[0].label}`, label: c => c.raw == null ? null : ` ${c.dataset.label}: ${fmt.dec1(c.raw)}` } } },
+      scales: { y: { min: 0, grid: { color: cssVar("--grid") }, border: { display: false }, title: { display: true, text: S.mD === "ppr_points" ? "Season PPR points" : "PPR points per game", color: ink2 } },
+        x: { ...plainX(), ticks: { callback: (v, i) => (i + 1) % 6 === 0 || i === 0 ? i + 1 : "" } } } } });
+}
+
+function spotlight() {
+  destroy("S");
+  if (!S.player) { spot.classList.remove("on"); return; }
+  const rs = DATA.filter(r => r.player_id === S.player).sort((a, b) => a.season - b.season);
+  if (!rs.length) { spot.classList.remove("on"); return; }
+  spot.classList.add("on");
+  const last = rs[rs.length - 1], pos = last.position;
+  spotName.innerHTML = `<span class="pos-dot" style="background:${posColor(pos)}"></span>${last.player} <span style="color:var(--muted);font-size:15px">${pos} · ${last.team}</span>`;
+  const tops = rs.filter(r => r.top_finisher === 1).length;
+  const best = rs.reduce((a, r) => r.pos_rank < a.pos_rank ? r : a);
+  const totPts = rs.reduce((a, r) => a + r.ppr_points, 0), totG = rs.reduce((a, r) => a + r.games, 0);
+  spotStats.innerHTML = `<div><b>${rs.length}</b>seasons, 2015–2025</div><div><b>${tops}</b>top-finisher seasons</div>
+    <div><b>${pos}${best.pos_rank}</b>best finish (${best.season})</div><div><b>${fmt.dec1(totPts / totG)}</b>PPR points per game</div>`;
+  const seasons = []; for (let s = FIRST_SEASON; s <= LAST_SEASON; s++) seasons.push(s);
+  const by = new Map(rs.map(r => [r.season, r]));
+  const col = posColor(pos);
+  charts.S = new Chart(cSpot, { type: "line", data: { labels: seasons, datasets: [
+      { label: "Finish", data: seasons.map(s => by.has(s) ? by.get(s).pos_rank : null), borderColor: col, backgroundColor: col, pointRadius: 5, spanGaps: false },
+      { label: "Cutoff", data: seasons.map(() => CUTOFF[pos]), borderColor: cssVar("--muted"), borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0 }] },
+    options: { plugins: { legend: { display: false }, tooltip: { filter: c => c.datasetIndex === 0, callbacks: { label: c => { const r = by.get(seasons[c.dataIndex]);
+      return ` ${pos}${r.pos_rank} · ${fmt.dec1(r.ppr_points)} pts in ${r.games} games (${r.team})`; } } } },
+      scales: { y: { reverse: true, min: 1, suggestedMax: Math.max(CUTOFF[pos] + 6, 12), grid: { color: cssVar("--grid") }, border: { display: false }, title: { display: true, text: `Finish among ${pos}s`, color: cssVar("--ink-2") } }, x: plainX() } } });
+}
+
+function table(rows) {
+  const sorted = [...rows].sort((a, b) => { const x = a[sortKey], y = b[sortKey];
+    if (x == null) return 1; if (y == null) return -1; return (x > y ? 1 : x < y ? -1 : 0) * sortDir; });
+  tblSub.textContent = `${rows.length.toLocaleString()} rows · showing ${Math.min(tblLimit, rows.length).toLocaleString()} · click a header to sort`;
+  const rep = r => r.top_finisher !== 1 ? `<span style="color:var(--muted)">not a top finisher</span>` :
+    r.next_top_finisher == null ? `<span style="color:var(--muted)">no next season yet</span>` :
+    r.next_top_finisher === 1 ? `<span class="yes">✓ Yes</span>` : `<span class="no">✗ No</span>`;
+  tbl.querySelector("tbody").innerHTML = sorted.slice(0, tblLimit).map(r => `<tr>
+    <td>${r.season}</td><td><a href="#" data-pid="${r.player_id}">${r.player}</a></td><td><span class="pos-dot" style="background:${posColor(r.position)}"></span>${r.position}</td><td>${r.team}</td>
+    <td class="num">${r.games}</td><td class="num">${fmt.dec1(r.ppr_points)}</td><td class="num">${fmt.dec1(r.ppr_per_game)}</td>
+    <td class="num">${r.position}${r.pos_rank}</td><td class="num">${r.next_pos_rank == null ? "–" : r.position + r.next_pos_rank}</td><td>${rep(r)}</td></tr>`).join("")
+    || `<tr><td colspan="10" class="empty">No player-seasons match these filters.</td></tr>`;
+  btnMore.style.display = rows.length > tblLimit ? "" : "none";
+  document.querySelectorAll("#tbl th.sortable").forEach(th => th.textContent = th.textContent.replace(/ [▲▼]$/, "") + (th.dataset.k === sortKey ? (sortDir < 0 ? " ▼" : " ▲") : ""));
+}
+
+function setup() {
+  for (let s = FIRST_SEASON; s <= LAST_SEASON; s++) { fFrom.add(new Option(s, s)); fTo.add(new Option(s, s)); }
+  [...new Set(DATA.map(r => r.team))].sort().forEach(t => fTeam.add(new Option(t, t)));
+  fPos.innerHTML = POSITIONS.map(p => `<button class="chip" data-p="${p}"><span class="pos-dot" style="background:${posColor(p)}"></span>${p}</button>`).join("");
+  // player list: latest name, position and seasons
+  const byId = new Map();
+  DATA.forEach(r => { const o = byId.get(r.player_id) || { name: r.player, pos: r.position, min: r.season, max: r.season, pts: 0 };
+    o.name = r.season >= o.max ? r.player : o.name; o.pos = r.season >= o.max ? r.position : o.pos;
+    o.min = Math.min(o.min, r.season); o.max = Math.max(o.max, r.season); o.pts += r.ppr_points; byId.set(r.player_id, o); });
+  const list = [...byId.entries()].sort((a, b) => b[1].pts - a[1].pts);
+  const seen = new Map();
+  list.forEach(([id, o]) => { let lab = `${o.name} (${o.pos})`; if (seen.has(lab)) lab = `${o.name} (${o.pos}, ${o.min}–${o.max})`; seen.set(lab, 1);
+    playerByLabel.set(lab, id); labelById.set(id, lab); });
+  players.innerHTML = [...playerByLabel.keys()].map(l => `<option value="${l.replace(/"/g, "&quot;")}">`).join("");
+
+  fFrom.onchange = () => { S.from = +fFrom.value; if (S.from > S.to) S.to = S.from; update(); };
+  fTo.onchange = () => { S.to = +fTo.value; if (S.to < S.from) S.from = S.to; update(); };
+  fTeam.onchange = () => { S.team = fTeam.value; update(); };
+  fPos.onclick = e => { const b = e.target.closest(".chip"); if (!b) return; const p = b.dataset.p;
+    if (S.pos.includes(p)) { if (S.pos.length > 1) S.pos = S.pos.filter(x => x !== p); } else S.pos = POSITIONS.filter(x => S.pos.includes(x) || x === p);
+    update(); };
+  fPos.ondblclick = e => { const b = e.target.closest(".chip"); if (b) { S.pos = [b.dataset.p]; update(); } };
+  quick.onclick = e => { const q = e.target.dataset.q; if (!q) return; S.to = LAST_SEASON; S.from = q === "all" ? FIRST_SEASON : LAST_SEASON - (+q) + 1; update(); };
+  fPlayer.oninput = () => { const id = playerByLabel.get(fPlayer.value); if (id) { S.player = id; tblLimit = 50; update(); } else if (!fPlayer.value && S.player) { S.player = ""; update(); } };
+  spotClose.onclick = () => { S.player = ""; update(); };
+  mA.onclick = e => { if (e.target.dataset.m) { S.mA = e.target.dataset.m; update(); } };
+  mD.onclick = e => { if (e.target.dataset.m) { S.mD = e.target.dataset.m; update(); } };
+  btnReset.onclick = () => { S = structuredClone(DEFAULT); tblLimit = 50; sortKey = "ppr_points"; sortDir = -1; update(); };
+  btnMore.onclick = () => { tblLimit += 50; table(view()); };
+  btnShare.onclick = async () => { try { await navigator.clipboard.writeText(location.href); toastMsg("Link copied"); } catch (e) { toastMsg("Copy the address bar to share this view"); } };
+  tbl.querySelector("thead").onclick = e => { const k = e.target.dataset.k; if (!k) return; sortDir = sortKey === k ? -sortDir : (["player", "position", "team", "pos_rank", "next_pos_rank"].includes(k) ? 1 : -1); sortKey = k; table(view()); };
+  tbl.querySelector("tbody").onclick = e => { const a = e.target.closest("a[data-pid]"); if (!a) return; e.preventDefault(); S.player = a.dataset.pid; update(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+}
+function toastMsg(m) { toast.textContent = m; toast.classList.add("on"); setTimeout(() => toast.classList.remove("on"), 1600); }
+
+setupThemeToggle(() => { draw(view()); spotlight(); });
+loadData().then(d => { DATA = d; readUrl(); setup(); update(); });
+</script>
+</body>
+</html>
