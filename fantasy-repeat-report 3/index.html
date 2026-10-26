@@ -103,6 +103,23 @@
     <a class="cta" href="dashboard.html">Explore by season, position, team or player →</a>
   </section>
 
+  <section class="notes" id="agreement" style="margin-top:40px">
+    <h2>Do the two builds agree?</h2>
+    <p>The same four numbers, computed separately by this website (JavaScript reading <code>data/player_seasons.csv</code>) and by the Tableau dashboard (calculated fields on the same file), with all seasons and positions selected.</p>
+    <div class="card table-scroll">
+      <table>
+        <thead><tr><th>Summary number</th><th class="num">Website</th><th class="num">Tableau</th><th>Match</th></tr></thead>
+        <tbody>
+          <tr><td>Player-seasons counted</td><td class="num" id="agSeasons">6,170</td><td class="num">6,170</td><td>✓</td></tr>
+          <tr><td>Top-finisher repeat rate</td><td class="num" id="agRepeat">52.4%</td><td class="num">52.4%</td><td>✓</td></tr>
+          <tr><td>Top-5 repeat rate</td><td class="num" id="agTop5">63.5%</td><td class="num">63.5%</td><td>✓</td></tr>
+          <tr><td>PPR points per game, top finishers</td><td class="num" id="agPPG">15.9</td><td class="num">15.9</td><td>✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Tableau Public dashboard: <a href="https://public.tableau.com/app/profile/nestor.aguilar/viz/RepeatorRegress/Dashboard1" target="_blank" rel="noopener">https://public.tableau.com/app/profile/nestor.aguilar/viz/RepeatorRegress/Dashboard1</a></p>
+  </section>
+
   <section class="notes" id="data">
     <h2>About the data</h2>
     <dl>
@@ -178,7 +195,8 @@ function draw() {
 }
 setupThemeToggle(draw);
 setupReveal();
-loadData().then(d => { DATA = d; renderKpis(kpis(DATA)); draw(); });
+loadData().then(d => { DATA = d; const k = kpis(DATA); renderKpis(k); draw();
+  agSeasons.textContent = fmt.int(k.playerSeasons); agRepeat.textContent = fmt.pct(k.repeatRate); agTop5.textContent = fmt.pct(k.top5Rate); agPPG.textContent = fmt.dec1(k.topPPG); });
 </script>
 </body>
 </html>
